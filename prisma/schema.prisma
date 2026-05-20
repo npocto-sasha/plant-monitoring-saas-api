@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DeviceStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum RecommendationSeverity {
+  NORMAL
+  INFO
+  WARNING
+  RISK
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  plants        Plant[]
+  devices       Device[]
+}
+
+model Plant {
+  id        Int      @id @default(autoincrement())
+  name      String
+  type      String?
+  location  String?
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  devices         Device[]
+  telemetry       TelemetryMeasurement[]
+  recommendations Recommendation[]
+}
+
+model Device {
+  id            Int          @id @default(autoincrement())
+  name          String
+  deviceCode    String       @unique
+  activationKey String?
+  status        DeviceStatus @default(PENDING)
+  userId        Int?
+  plantId       Int?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  user      User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  plant     Plant?                 @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  telemetry TelemetryMeasurement[]
+}
+
+model TelemetryMeasurement {
+  id           Int      @id @default(autoincrement())
+  deviceId     Int
+  plantId      Int
+  soilMoisture Float?
+  temperature  Float?
+  light        Float?
+  measuredAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  plant  Plant  @relation(fields: [plantId], references: [id], onDelete: Cascade)
+
+  @@index([plantId, measuredAt])
+  @@index([deviceId, measuredAt])
+}
+
+model Recommendation {
+  id        Int                    @id @default(autoincrement())
+  plantId   Int
+  title     String
+  message   String
+  severity  RecommendationSeverity @default(INFO)
+  type      String?
+  createdAt DateTime               @default(now())
+
+  plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
+
+  @@index([plantId, createdAt])
+}
