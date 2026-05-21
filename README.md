@@ -1,98 +1,542 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Plant Monitoring SaaS API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend-часть магистерского проекта **Plant Monitoring SaaS** — SaaS-системы для слежения за растениями и анализа данных через мобильное приложение.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Проект реализует REST API для работы с пользователями, растениями, ESP32-устройствами, телеметрией и рекомендациями.
 
-## Description
+## Описание
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Backend предназначен для приема, хранения и обработки данных, связанных с мониторингом состояния растений.
 
-## Project setup
+Целевая логика системы:
 
-```bash
-$ npm install
+```text
+ESP32 + датчики
+↓
+Backend API
+↓
+PostgreSQL
+↓
+Мобильное приложение
+↓
+Пользователь
 ```
 
-## Compile and run the project
+ESP32-устройство отправляет данные о состоянии растения на backend. Backend сохраняет телеметрию в базе данных, связывает данные с конкретным растением и устройством, а также формирует рекомендации на основе простых правил анализа.
 
-```bash
-# development
-$ npm run start
+## Текущий статус
 
-# watch mode
-$ npm run start:dev
+Проект находится на стадии backend-прототипа.
 
-# production mode
-$ npm run start:prod
+На текущем этапе реализованы:
+
+- подключение NestJS;
+- подключение Prisma ORM;
+- подключение PostgreSQL;
+- базовая Prisma-схема;
+- модуль растений;
+- модуль устройств;
+- привязка устройств к растениям;
+- модуль телеметрии;
+- модуль рекомендаций;
+- базовая бизнес-логика анализа показателей.
+
+Авторизация пока не реализована в новой архитектуре. Для тестирования временно используется демо-пользователь с `userId = 1`.
+
+## Технологический стек
+
+- Node.js;
+- NestJS;
+- TypeScript;
+- Prisma ORM;
+- PostgreSQL;
+- Prisma PostgreSQL Adapter;
+- REST API.
+
+## Основные сущности
+
+### User
+
+Пользователь системы.
+
+Основные поля:
+
+- `id`;
+- `email`;
+- `passwordHash`;
+- `name`;
+- `createdAt`;
+- `updatedAt`.
+
+### Plant
+
+Растение пользователя.
+
+Основные поля:
+
+- `id`;
+- `name`;
+- `type`;
+- `location`;
+- `userId`;
+- `createdAt`;
+- `updatedAt`.
+
+### Device
+
+ESP32-устройство, которое может быть привязано к растению.
+
+Основные поля:
+
+- `id`;
+- `name`;
+- `deviceCode`;
+- `activationKey`;
+- `status`;
+- `userId`;
+- `plantId`;
+- `createdAt`;
+- `updatedAt`.
+
+### TelemetryMeasurement
+
+Измерение, полученное от устройства.
+
+Основные поля:
+
+- `id`;
+- `deviceId`;
+- `plantId`;
+- `soilMoisture`;
+- `temperature`;
+- `light`;
+- `measuredAt`;
+- `createdAt`.
+
+### Recommendation
+
+Рекомендация, связанная с растением.
+
+Основные поля:
+
+- `id`;
+- `plantId`;
+- `title`;
+- `message`;
+- `severity`;
+- `type`;
+- `createdAt`.
+
+В текущей версии рекомендации формируются на лету на основе последних показателей телеметрии.
+
+## Структура проекта
+
+```text
+src/
+  app.controller.ts
+  app.module.ts
+  app.service.ts
+  main.ts
+
+  prisma/
+    prisma.module.ts
+    prisma.service.ts
+
+  plants/
+    dto/
+      create-plant.dto.ts
+      update-plant.dto.ts
+    plants.controller.ts
+    plants.module.ts
+    plants.service.ts
+
+  devices/
+    dto/
+      bind-device.dto.ts
+      create-device.dto.ts
+    devices.controller.ts
+    devices.module.ts
+    devices.service.ts
+
+  telemetry/
+    dto/
+      create-telemetry.dto.ts
+    telemetry.controller.ts
+    telemetry.module.ts
+    telemetry.service.ts
+
+  recommendations/
+    recommendations.controller.ts
+    recommendations.module.ts
+    recommendations.service.ts
+
+prisma/
+  schema.prisma
+  migrations/
+
+prisma.config.ts
 ```
 
-## Run tests
+## Переменные окружения
 
-```bash
-# unit tests
-$ npm run test
+Создайте файл `.env` в корне проекта.
 
-# e2e tests
-$ npm run test:e2e
+Пример:
 
-# test coverage
-$ npm run test:cov
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/plant_monitoring_saas?schema=public"
 ```
 
-## Deployment
+Где:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- `postgres` — имя пользователя PostgreSQL;
+- `password` — пароль пользователя PostgreSQL;
+- `localhost` — адрес локального сервера PostgreSQL;
+- `5432` — порт PostgreSQL;
+- `plant_monitoring_saas` — имя базы данных.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Файл `.env` не должен попадать в Git.
+
+## Установка
+
+Установите зависимости:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Настройка базы данных
 
-## Resources
+Создайте базу данных PostgreSQL:
 
-Check out a few resources that may come in handy when working with NestJS:
+```text
+plant_monitoring_saas
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Затем выполните миграции Prisma:
 
-## Support
+```bash
+npx prisma migrate dev
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Сгенерируйте Prisma Client:
 
-## Stay in touch
+```bash
+npx prisma generate
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Запуск проекта
 
-## License
+Режим разработки:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+npm run start:dev
+```
+
+После запуска backend будет доступен по адресу:
+
+```text
+http://localhost:3000
+```
+
+## Prisma Studio
+
+Для просмотра и редактирования данных в базе можно использовать Prisma Studio:
+
+```bash
+npx prisma studio
+```
+
+## API endpoints
+
+### Plants
+
+#### Получить список растений
+
+```http
+GET /plants
+```
+
+#### Получить одно растение
+
+```http
+GET /plants/:id
+```
+
+#### Создать растение
+
+```http
+POST /plants
+```
+
+Пример тела запроса:
+
+```json
+{
+  "name": "Фикус",
+  "type": "Комнатное растение",
+  "location": "Подоконник"
+}
+```
+
+#### Обновить растение
+
+```http
+PATCH /plants/:id
+```
+
+Пример тела запроса:
+
+```json
+{
+  "location": "Гостиная"
+}
+```
+
+#### Удалить растение
+
+```http
+DELETE /plants/:id
+```
+
+### Devices
+
+#### Получить список устройств
+
+```http
+GET /devices
+```
+
+#### Получить одно устройство
+
+```http
+GET /devices/:id
+```
+
+#### Создать устройство
+
+```http
+POST /devices
+```
+
+Пример тела запроса:
+
+```json
+{
+  "name": "ESP32 у фикуса",
+  "deviceCode": "esp32-001",
+  "activationKey": "demo-key"
+}
+```
+
+#### Привязать устройство к растению
+
+```http
+PATCH /devices/:id/bind-plant
+```
+
+Пример тела запроса:
+
+```json
+{
+  "plantId": 1
+}
+```
+
+#### Удалить устройство
+
+```http
+DELETE /devices/:id
+```
+
+### Telemetry
+
+#### Отправить телеметрию
+
+```http
+POST /telemetry
+```
+
+Пример тела запроса:
+
+```json
+{
+  "deviceCode": "esp32-001",
+  "soilMoisture": 42,
+  "temperature": 23.5,
+  "light": 680
+}
+```
+
+#### Получить последний замер растения
+
+```http
+GET /telemetry/plants/:plantId/latest
+```
+
+#### Получить историю измерений растения
+
+```http
+GET /telemetry/plants/:plantId/history
+```
+
+### Recommendations
+
+#### Получить все рекомендации
+
+```http
+GET /recommendations
+```
+
+#### Получить рекомендации по одному растению
+
+```http
+GET /recommendations/plants/:plantId
+```
+
+## Логика рекомендаций
+
+В текущей версии рекомендации формируются на основе последнего измерения растения.
+
+Используются простые правила:
+
+```text
+Если устройство не подключено → рекомендация подключить ESP32
+Если устройство подключено, но телеметрии нет → рекомендация проверить отправку данных
+Если влажность почвы < 30% → рекомендация проверить полив
+Если влажность почвы < 20% → высокий риск
+Если температура < 18°C → рекомендация повысить температуру
+Если температура < 16°C → высокий риск
+Если освещенность < 300 lx → рекомендация улучшить освещение
+Если освещенность < 200 lx → высокий риск
+Если отклонений нет → показатели в норме
+```
+
+## Пример сценария тестирования
+
+### 1. Создать растение
+
+```http
+POST /plants
+```
+
+```json
+{
+  "name": "Фикус",
+  "type": "Комнатное растение",
+  "location": "Подоконник"
+}
+```
+
+### 2. Создать устройство
+
+```http
+POST /devices
+```
+
+```json
+{
+  "name": "ESP32 у фикуса",
+  "deviceCode": "esp32-001",
+  "activationKey": "demo-key"
+}
+```
+
+### 3. Привязать устройство к растению
+
+```http
+PATCH /devices/1/bind-plant
+```
+
+```json
+{
+  "plantId": 1
+}
+```
+
+### 4. Отправить телеметрию
+
+```http
+POST /telemetry
+```
+
+```json
+{
+  "deviceCode": "esp32-001",
+  "soilMoisture": 42,
+  "temperature": 23.5,
+  "light": 680
+}
+```
+
+### 5. Получить историю измерений
+
+```http
+GET /telemetry/plants/1/history
+```
+
+### 6. Получить рекомендации
+
+```http
+GET /recommendations/plants/1
+```
+
+## Работа с ESP32
+
+В будущей версии ESP32 будет отправлять данные на endpoint:
+
+```http
+POST /telemetry
+```
+
+Пример JSON:
+
+```json
+{
+  "deviceCode": "esp32-001",
+  "soilMoisture": 42,
+  "temperature": 23.5,
+  "light": 680
+}
+```
+
+На первом этапе используется HTTP. В дальнейшем возможно добавление MQTT.
+
+## Текущие ограничения
+
+- авторизация пока не реализована в новой backend-архитектуре;
+- временно используется `userId = 1`;
+- рекомендации формируются на лету, без сохранения в таблицу;
+- нет проверки прав доступа пользователя к объектам через JWT;
+- нет Swagger-документации;
+- нет валидации DTO через `class-validator`;
+- нет production-конфигурации.
+
+## Планы развития
+
+Ближайшие задачи:
+
+- добавить авторизацию и регистрацию;
+- реализовать JWT guard;
+- заменить временный `userId = 1` на текущего пользователя из токена;
+- подключить мобильное приложение к backend API;
+- добавить DTO-валидацию;
+- добавить Swagger;
+- реализовать прием данных от ESP32;
+- добавить MQTT как альтернативный транспорт;
+- расширить аналитику рекомендаций;
+- добавить агрегацию истории измерений;
+- подготовить backend к демонстрации в рамках магистерской диссертации.
+
+## Назначение проекта
+
+Backend используется как серверная часть магистерского проекта по разработке SaaS-системы для слежения за растениями и анализа данных с использованием мобильного приложения.
+
+Проект демонстрирует серверную архитектуру для системы, объединяющей:
+
+- пользователей;
+- растения;
+- IoT-устройства;
+- телеметрические данные;
+- историю измерений;
+- рекомендации по уходу.
