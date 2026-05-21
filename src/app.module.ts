@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { PlantsModule } from './plants/plants.module';
 import { DevicesModule } from './devices/devices.module';
 import { TelemetryModule } from './telemetry/telemetry.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TelemetryModule } from './telemetry/telemetry.module';
     PlantsModule,
     DevicesModule,
     TelemetryModule,
+    RecommendationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
