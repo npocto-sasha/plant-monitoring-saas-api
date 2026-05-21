@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { PlantsModule } from './plants/plants.module';
 import { DevicesModule } from './devices/devices.module';
+import { TelemetryModule } from './telemetry/telemetry.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { DevicesModule } from './devices/devices.module';
     PrismaModule,
     PlantsModule,
     DevicesModule,
+    TelemetryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
